@@ -1,3 +1,9 @@
+use pixie::rendering::Renderer;
+
 fn main() {
-    println!("Hello, world!");
+    let seed = "plop".into();
+    let canva = pixie::generator::Canva::new(5, seed);
+    pixie::rendering::Terminal
+        .render(std::io::stdout(), canva)
+        .expect("failed to render image to terminal");
 }
