@@ -1,15 +1,7 @@
-pub trait Renderer {
-    fn render<W: std::io::Write>(
-        &mut self,
-        w: W,
-        canva: crate::generator::Canva,
-    ) -> Result<(), String>;
-}
-
 pub struct Terminal;
 
-impl Renderer for Terminal {
-    fn render<W: std::io::Write>(
+impl Terminal {
+    pub fn render<W: std::io::Write>(
         &mut self,
         mut w: W,
         canva: crate::generator::Canva,
@@ -30,10 +22,42 @@ impl Renderer for Terminal {
     }
 }
 
+pub struct Png;
+
+impl Png {
+    pub fn render<W: std::io::Write + std::io::Seek>(
+        &mut self,
+        mut w: W,
+        canva: crate::generator::Canva,
+    ) -> Result<(), String> {
+        let pixel_size = 50;
+        let image_size = (pixel_size * canva.size()) as u32;
+
+        let pixel_size = pixel_size as u32;
+        let color = image::Rgb([0, 0, 0]);
+
+        let mut img = image::RgbImage::new(image_size, image_size);
+        let rect = imageproc::rect::Rect::at(0, 0).of_size(image_size, image_size);
+        imageproc::drawing::draw_filled_rect_mut(&mut img, rect, image::Rgb([255, 255, 255]));
+
+        canva
+            .into_iter()
+            .filter(|(_, displayed)| *displayed)
+            .map(|(pt, _)| pt)
+            .for_each(|pt| {
+                let x = pt.x as i32 * pixel_size as i32;
+                let y = pt.y as i32 * pixel_size as i32;
+                let rect = imageproc::rect::Rect::at(x, y).of_size(pixel_size, pixel_size);
+                imageproc::drawing::draw_filled_rect_mut(&mut img, rect, color);
+            });
+
+        img.write_to(&mut w, image::ImageOutputFormat::Png)
+            .map_err(|e| e.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::Renderer;
-
     #[test]
     fn terminal_render() {
         let canva = crate::generator::Canva::new(5, "hello".into());

@@ -1,9 +1,18 @@
-use pixie::rendering::Renderer;
-
 fn main() {
     let seed = "plop".into();
     let canva = pixie::generator::Canva::new(5, seed);
     pixie::rendering::Terminal
-        .render(std::io::stdout(), canva)
+        .render(std::io::stdout(), canva.clone())
+        .expect("failed to render image to terminal");
+
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open("pixie.png")
+        .expect("failed to open file");
+
+    pixie::rendering::Png
+        .render(file, canva)
         .expect("failed to render image to terminal");
 }

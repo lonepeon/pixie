@@ -39,6 +39,7 @@ pub struct Point {
     pub y: usize,
 }
 
+#[derive(Clone)]
 pub struct Canva {
     size: usize,
     canva: Vec<bool>,
