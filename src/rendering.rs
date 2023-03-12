@@ -7,16 +7,21 @@ impl Terminal {
         canva: crate::generator::Canva,
     ) -> Result<(), String> {
         let mut current_line = 0;
+        let line = "──".repeat(canva.size());
+        writeln!(w, "┌─{}─┐", line).expect("failed to write top border");
+        write!(w, "│ ").expect("failed to write beginning of drawing");
         canva.into_iter().for_each(|(pt, shown)| {
             if pt.y > current_line {
                 current_line = pt.y;
-                writeln!(w).expect("failed to write newline");
+                writeln!(w, " │").expect("failed to write end of line");
+                write!(w, "│ ").expect("failed to write end of line");
             }
 
-            let pattern = if shown { "█" } else { " " };
+            let pattern = if shown { "██" } else { "  " };
             write!(w, "{}", pattern).expect("failed to write character");
         });
-        writeln!(w).expect("failed to write newline");
+        writeln!(w, " │").expect("failed to write end of drawing");
+        writeln!(w, "└─{}─┘", line).expect("failed to write bottom border");
 
         Ok(())
     }
@@ -31,9 +36,11 @@ impl Png {
         canva: crate::generator::Canva,
     ) -> Result<(), String> {
         let pixel_size = 50;
-        let image_size = (pixel_size * canva.size()) as u32;
+        let margin = pixel_size / 2;
+        let image_size = (pixel_size * canva.size() + (margin * 2)) as u32;
 
         let pixel_size = pixel_size as u32;
+        let margin = margin as i32;
         let color = image::Rgb([0, 0, 0]);
 
         let mut img = image::RgbImage::new(image_size, image_size);
@@ -45,8 +52,8 @@ impl Png {
             .filter(|(_, displayed)| *displayed)
             .map(|(pt, _)| pt)
             .for_each(|pt| {
-                let x = pt.x as i32 * pixel_size as i32;
-                let y = pt.y as i32 * pixel_size as i32;
+                let x = margin + (pt.x as i32 * pixel_size as i32);
+                let y = margin + (pt.y as i32 * pixel_size as i32);
                 let rect = imageproc::rect::Rect::at(x, y).of_size(pixel_size, pixel_size);
                 imageproc::drawing::draw_filled_rect_mut(&mut img, rect, color);
             });
@@ -60,7 +67,8 @@ impl Png {
 mod tests {
     #[test]
     fn terminal_render() {
-        let canva = crate::generator::Canva::new(5, "hello".into());
+        let generator: crate::generator::Seed = "hello".into();
+        let canva = crate::generator::Canva::new(5, generator);
         let mut buffer = Vec::new();
 
         super::Terminal

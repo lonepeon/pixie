@@ -46,11 +46,25 @@ pub struct Canva {
 }
 
 impl Canva {
-    pub fn new(size: usize, seed: Seed) -> Self {
-        Self {
-            size,
-            canva: seed.take(size * size).collect(),
-        }
+    pub fn new<S: Iterator<Item = bool>>(size: usize, mut seed: S) -> Self {
+        let middle = size / 2;
+        let mut canva = vec![false; size * size];
+
+        let left_side: Vec<usize> = canva
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| index % size < middle)
+            .map(|(index, _)| index)
+            .collect();
+
+        left_side.into_iter().for_each(|index| {
+            let value = seed.next().expect("failed to generate next value");
+            canva[index] = value;
+            let mirrored_index = (size * (index / size)) + (size - 1) - (index % size);
+            canva[mirrored_index] = value;
+        });
+
+        Self { size, canva }
     }
 
     pub fn size(&self) -> usize {
@@ -109,6 +123,24 @@ impl Iterator for CanvaIter {
 
 #[cfg(test)]
 mod tests {
+    struct StaticSeeder {
+        data: Vec<bool>,
+        position: usize,
+    }
+
+    impl Iterator for StaticSeeder {
+        type Item = bool;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.position == self.data.len() {
+                self.position = 0;
+            }
+            let value = self.data[self.position];
+            self.position += 1;
+            Some(value)
+        }
+    }
+
     #[test]
     fn seed_from_string() {
         let generator: super::Seed = "hello".into();
@@ -140,11 +172,22 @@ mod tests {
 
     #[test]
     fn canva_new() {
-        let generator: super::Seed = "hello".into();
-        let canva = super::Canva::new(5, generator);
+        let generator = StaticSeeder {
+            data: vec![false, true, false, true, false, true],
+            position: 0,
+        };
+        let canva = super::Canva::new(6, generator);
 
-        assert_eq!(5, canva.size);
-        assert_eq!(25, canva.canva.len());
+        assert_eq!(6, canva.size);
+        assert_eq!(36, canva.canva.len());
+        assert_eq!(
+            vec![
+                false, true, false, false, true, false, true, false, true, true, false, true,
+                false, true, false, false, true, false, true, false, true, true, false, true,
+                false, true, false, false, true, false, true, false, true, true, false, true,
+            ],
+            canva.canva
+        )
     }
 
     #[test]

@@ -1,5 +1,6 @@
 fn main() {
-    let seed = "plop".into();
+    let word = std::env::args().nth(1).expect("send a name as argument");
+    let seed: pixie::generator::Seed = word.into();
     let canva = pixie::generator::Canva::new(5, seed);
     pixie::rendering::Terminal
         .render(std::io::stdout(), canva.clone())
