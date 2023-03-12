@@ -1,27 +1,45 @@
 pub struct Terminal;
 
 impl Terminal {
+    fn ansi_color(&self, color: crate::generator::Color) -> usize {
+        match color {
+            crate::generator::Color::Red => 160,
+            crate::generator::Color::Blue => 33,
+            crate::generator::Color::Pink => 199,
+            crate::generator::Color::Green => 40,
+            crate::generator::Color::Brown => 130,
+            crate::generator::Color::Purple => 140,
+            crate::generator::Color::Yellow => 226,
+            crate::generator::Color::Black => 232,
+        }
+    }
+
     pub fn render<W: std::io::Write>(
         &mut self,
         mut w: W,
         canva: crate::generator::Canva,
     ) -> Result<(), String> {
-        let mut current_line = 0;
         let line = "──".repeat(canva.size());
-        writeln!(w, "┌─{}─┐", line).expect("failed to write top border");
-        write!(w, "│ ").expect("failed to write beginning of drawing");
+        let color = self.ansi_color(canva.color());
+
+        writeln!(w, "\x1b[38;5;{};48;5;15m┌─{}─┐\x1b[0m", color, line)
+            .expect("failed to write top border");
+        write!(w, "\x1b[38;5;{};48;5;15m│ ", color).expect("failed to write beginning of drawing");
+
+        let mut current_line = 0;
         canva.into_iter().for_each(|(pt, shown)| {
             if pt.y > current_line {
                 current_line = pt.y;
-                writeln!(w, " │").expect("failed to write end of line");
-                write!(w, "│ ").expect("failed to write end of line");
+                writeln!(w, " │\x1b[0m").expect("failed to write end of line");
+                write!(w, "\x1b[38;5;{};48;5;15m│ ", color).expect("failed to write end of line");
             }
 
             let pattern = if shown { "██" } else { "  " };
             write!(w, "{}", pattern).expect("failed to write character");
         });
-        writeln!(w, " │").expect("failed to write end of drawing");
-        writeln!(w, "└─{}─┘", line).expect("failed to write bottom border");
+        writeln!(w, " │\x1b[0m").expect("failed to write end of drawing");
+        writeln!(w, "\x1b[38;5;{};48;5;15m└─{}─┘\x1b[0m", color, line)
+            .expect("failed to write bottom border");
 
         Ok(())
     }
@@ -30,6 +48,19 @@ impl Terminal {
 pub struct Png;
 
 impl Png {
+    fn rgb_color(&self, color: crate::generator::Color) -> image::Rgb<u8> {
+        match color {
+            crate::generator::Color::Red => image::Rgb([222, 48, 48]),
+            crate::generator::Color::Blue => image::Rgb([48, 146, 227]),
+            crate::generator::Color::Pink => image::Rgb([227, 97, 177]),
+            crate::generator::Color::Green => image::Rgb([109, 212, 123]),
+            crate::generator::Color::Brown => image::Rgb([190, 99, 9]),
+            crate::generator::Color::Black => image::Rgb([255, 255, 255]),
+            crate::generator::Color::Purple => image::Rgb([220, 187, 252]),
+            crate::generator::Color::Yellow => image::Rgb([254, 255, 41]),
+        }
+    }
+
     pub fn render<W: std::io::Write + std::io::Seek>(
         &mut self,
         mut w: W,
@@ -41,7 +72,7 @@ impl Png {
 
         let pixel_size = pixel_size as u32;
         let margin = margin as i32;
-        let color = image::Rgb([0, 0, 0]);
+        let color = self.rgb_color(canva.color());
 
         let mut img = image::RgbImage::new(image_size, image_size);
         let rect = imageproc::rect::Rect::at(0, 0).of_size(image_size, image_size);
