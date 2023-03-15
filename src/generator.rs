@@ -54,8 +54,9 @@ pub enum Color {
 impl Color {
     pub fn new<S: Iterator<Item = bool>>(seed: S) -> Self {
         let number_of_colors = 8;
-        let value = seed.take(100).fold(0, |x, b| x + (b as u8)) % number_of_colors;
-        match value {
+        let value: usize = seed.take(10 * number_of_colors).map(|b| b as usize).sum();
+
+        match value % number_of_colors {
             0 => Self::Red,
             1 => Self::Green,
             2 => Self::Blue,
@@ -88,9 +89,12 @@ impl Canva {
             .collect();
 
         left_side.into_iter().for_each(|index| {
-            let value = seed.next().expect("failed to generate next value");
-            canva[index] = value;
             let mirrored_index = (size * (index / size)) + (size - 1) - (index % size);
+            let value = seed
+                .next()
+                .expect("seeder should be infinite and always yield values");
+
+            canva[index] = value;
             canva[mirrored_index] = value;
         });
 
@@ -215,7 +219,7 @@ mod tests {
         let canva = super::Canva::new(6, generator);
 
         assert_eq!(6, canva.size);
-        assert_eq!(super::Color::Blue, canva.color);
+        assert_eq!(super::Color::Red, canva.color);
         assert_eq!(36, canva.canva.len());
         assert_eq!(
             vec![

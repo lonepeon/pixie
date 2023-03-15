@@ -14,11 +14,7 @@ impl Terminal {
         }
     }
 
-    pub fn render<W: std::io::Write>(
-        &mut self,
-        mut w: W,
-        canva: crate::generator::Canva,
-    ) -> Result<(), String> {
+    pub fn render<W: std::io::Write>(&mut self, mut w: W, canva: crate::generator::Canva) {
         let line = "──".repeat(canva.size());
         let color = self.ansi_color(canva.color());
 
@@ -40,8 +36,6 @@ impl Terminal {
         writeln!(w, " │\x1b[0m").expect("failed to write end of drawing");
         writeln!(w, "\x1b[38;5;{};48;5;15m└─{}─┘\x1b[0m", color, line)
             .expect("failed to write bottom border");
-
-        Ok(())
     }
 }
 
@@ -65,7 +59,7 @@ impl Png {
         &mut self,
         mut w: W,
         canva: crate::generator::Canva,
-    ) -> Result<(), String> {
+    ) -> Result<(), crate::error::Error> {
         let pixel_size = 50;
         let margin = pixel_size / 2;
         let image_size = (pixel_size * canva.size() + (margin * 2)) as u32;
@@ -89,8 +83,8 @@ impl Png {
                 imageproc::drawing::draw_filled_rect_mut(&mut img, rect, color);
             });
 
-        img.write_to(&mut w, image::ImageOutputFormat::Png)
-            .map_err(|e| e.to_string())
+        img.write_to(&mut w, image::ImageOutputFormat::Png)?;
+        Ok(())
     }
 }
 
@@ -102,9 +96,7 @@ mod tests {
         let canva = crate::generator::Canva::new(5, generator);
         let mut buffer = Vec::new();
 
-        super::Terminal
-            .render(&mut buffer, canva)
-            .expect("failed to render");
+        super::Terminal.render(&mut buffer, canva);
 
         let output = String::from_utf8(buffer).expect("failed to cast bytes to string");
 
