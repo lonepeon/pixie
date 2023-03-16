@@ -56,6 +56,8 @@ impl Color {
         let number_of_colors = 8;
         let value: usize = seed.take(10 * number_of_colors).map(|b| b as usize).sum();
 
+        println!("{}", value);
+
         match value % number_of_colors {
             0 => Self::Red,
             1 => Self::Green,
@@ -179,6 +181,106 @@ mod tests {
             self.position += 1;
             Some(value)
         }
+    }
+
+    #[test]
+    fn color_new_red() {
+        let seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Red, color)
+    }
+
+    #[test]
+    fn color_new_green() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+        seed.data[0] = true;
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Green, color)
+    }
+
+    #[test]
+    fn color_new_blue() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..2).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Blue, color)
+    }
+
+    #[test]
+    fn color_new_purple() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..3).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Purple, color)
+    }
+
+    #[test]
+    fn color_new_pink() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..4).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Pink, color)
+    }
+
+    #[test]
+    fn color_new_brown() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..5).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Brown, color)
+    }
+
+    #[test]
+    fn color_new_yellow() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..6).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Yellow, color)
+    }
+    #[test]
+    fn color_new_black() {
+        let mut seed = StaticSeeder {
+            data: vec![false; 80],
+            position: 0,
+        };
+
+        (0..7).for_each(|i| seed.data[i] = true);
+
+        let color = super::Color::new(seed);
+        assert_eq!(super::Color::Black, color)
     }
 
     #[test]
