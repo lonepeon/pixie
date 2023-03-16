@@ -1,6 +1,6 @@
 use clap::Parser;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CliOutput {
     Terminal,
     Png,
@@ -85,4 +85,40 @@ fn run() -> Result<(), pixie::error::Error> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    #[test]
+    fn cli_output_from_string_term() {
+        let out = super::CliOutput::from_str("term").expect("failed to build a valid CLI output");
+
+        assert_eq!(super::CliOutput::Terminal, out)
+    }
+
+    #[test]
+    fn cli_output_from_string_png() {
+        let out = super::CliOutput::from_str("png").expect("failed to build a valid CLI output");
+
+        assert_eq!(super::CliOutput::Png, out)
+    }
+
+    #[test]
+    fn cli_output_from_string_unexpected() {
+        let err = super::CliOutput::from_str("nope").err();
+
+        assert_eq!(Some("unsupported output format 'nope'".to_string()), err)
+    }
+
+    #[test]
+    fn cli_output_display_term() {
+        assert_eq!("term", format!("{}", super::CliOutput::Terminal))
+    }
+
+    #[test]
+    fn cli_output_display_png() {
+        assert_eq!("png", format!("{}", super::CliOutput::Png))
+    }
 }
