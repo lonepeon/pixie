@@ -1,3 +1,58 @@
+use clap::Parser;
+
+#[derive(Clone, Copy)]
+enum CliOutput {
+    Terminal,
+    Png,
+}
+
+impl std::fmt::Display for CliOutput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = match self {
+            Self::Terminal => "term",
+            Self::Png => "png",
+        };
+
+        write!(f, "{}", value)
+    }
+}
+
+impl std::str::FromStr for CliOutput {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "term" => Ok(Self::Terminal),
+            "png" => Ok(Self::Png),
+            value => Err(format!("unsupported output format '{}'", value)),
+        }
+    }
+}
+
+#[derive(clap::Parser)]
+#[command(version, about)]
+struct Cli {
+    #[arg(short='o', long="output", default_value_t = CliOutput::Terminal, help = "format of the generated image (term=ascii characters, png=png file)")]
+    output: CliOutput,
+    #[arg(
+        short = 's',
+        long = "size",
+        default_value_t = 10,
+        help = "size of the pixel grid"
+    )]
+    size: usize,
+    #[arg(
+        short = 'f',
+        long = "file",
+        default_value = "pixie.png",
+        help = "file where the image should be written. Only used by the PNG output."
+    )]
+    filename: String,
+
+    #[arg(help = "word used as a base value to generate the image")]
+    word: String,
+}
+
 fn main() {
     if let Some(error) = run().err() {
         eprintln!("{}", error);
@@ -6,26 +61,28 @@ fn main() {
 }
 
 fn run() -> Result<(), pixie::error::Error> {
-    let filename = "pixie.png";
-    let size = 5;
-    let word = std::env::args().nth(1).expect("send a name as argument");
-    let seed: pixie::generator::Seed = word.into();
-    let canva = pixie::generator::Canva::new(size, seed);
+    let cli = Cli::parse();
 
-    pixie::rendering::Terminal.render(std::io::stdout(), canva.clone());
+    let seed: pixie::generator::Seed = cli.word.into();
+    let canva = pixie::generator::Canva::new(cli.size, seed);
 
-    let file = std::fs::OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .write(true)
-        .open(filename)
-        .map_err(|e| {
-            pixie::error::Error::from(e).context(format!("cannot open \"{}\"", filename))
-        })?;
-
-    pixie::rendering::Png
-        .render(file, canva)
-        .map_err(|e| e.context(format!("cannot generate PNG to \"{}\"", filename)))?;
+    match cli.output {
+        CliOutput::Terminal => pixie::rendering::Terminal.render(std::io::stdout(), canva),
+        CliOutput::Png => {
+            let file = std::fs::OpenOptions::new()
+                .create(true)
+                .truncate(true)
+                .write(true)
+                .open(&cli.filename)
+                .map_err(|e| {
+                    pixie::error::Error::from(e)
+                        .context(format!("cannot open \"{}\"", cli.filename))
+                })?;
+            pixie::rendering::Png
+                .render(file, canva)
+                .map_err(|e| e.context(format!("cannot generate PNG to \"{}\"", cli.filename)))?;
+        }
+    }
 
     Ok(())
 }
