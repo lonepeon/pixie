@@ -49,7 +49,7 @@ impl Png {
             crate::generator::Color::Pink => image::Rgb([227, 97, 177]),
             crate::generator::Color::Green => image::Rgb([109, 212, 123]),
             crate::generator::Color::Brown => image::Rgb([190, 99, 9]),
-            crate::generator::Color::Black => image::Rgb([255, 255, 255]),
+            crate::generator::Color::Black => image::Rgb([0, 0, 0]),
             crate::generator::Color::Purple => image::Rgb([220, 187, 252]),
             crate::generator::Color::Yellow => image::Rgb([254, 255, 41]),
         }

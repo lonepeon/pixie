@@ -56,8 +56,6 @@ impl Color {
         let number_of_colors = 8;
         let value: usize = seed.take(10 * number_of_colors).map(|b| b as usize).sum();
 
-        println!("{}", value);
-
         match value % number_of_colors {
             0 => Self::Red,
             1 => Self::Green,
