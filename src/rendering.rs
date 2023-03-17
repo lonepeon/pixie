@@ -1,7 +1,7 @@
 pub struct Terminal;
 
 impl Terminal {
-    fn ansi_color(&self, color: crate::generator::Color) -> usize {
+    fn ansi_color(color: crate::generator::Color) -> usize {
         match color {
             crate::generator::Color::Red => 160,
             crate::generator::Color::Blue => 33,
@@ -16,7 +16,7 @@ impl Terminal {
 
     pub fn render<W: std::io::Write>(&mut self, mut w: W, canva: crate::generator::Canva) {
         let line = "──".repeat(canva.size());
-        let color = self.ansi_color(canva.color());
+        let color = Self::ansi_color(canva.color());
 
         writeln!(w, "\x1b[38;5;{};48;5;15m┌─{}─┐\x1b[0m", color, line)
             .expect("failed to write top border");
@@ -42,7 +42,7 @@ impl Terminal {
 pub struct Png;
 
 impl Png {
-    fn rgb_color(&self, color: crate::generator::Color) -> image::Rgb<u8> {
+    fn rgb_color(color: crate::generator::Color) -> image::Rgb<u8> {
         match color {
             crate::generator::Color::Red => image::Rgb([222, 48, 48]),
             crate::generator::Color::Blue => image::Rgb([48, 146, 227]),
@@ -66,7 +66,7 @@ impl Png {
 
         let pixel_size = pixel_size as u32;
         let margin = margin as i32;
-        let color = self.rgb_color(canva.color());
+        let color = Self::rgb_color(canva.color());
 
         let mut img = image::RgbImage::new(image_size, image_size);
         let rect = imageproc::rect::Rect::at(0, 0).of_size(image_size, image_size);
@@ -102,5 +102,20 @@ mod tests {
 
         let expect = include_str!("../testdata/terminal_render.ascii");
         assert_eq!(expect, output)
+    }
+
+    #[test]
+    fn png_render() {
+        let generator: crate::generator::Seed = "hello".into();
+        let canva = crate::generator::Canva::new(5, generator);
+        let mut buffer = Vec::new();
+
+        super::Png
+            .render(std::io::Cursor::new(&mut buffer), canva)
+            .expect("failed to render PNG");
+
+        let expect = std::fs::read("testdata/png_render.png").expect("failed to read expected PNG");
+
+        assert_eq!(expect, buffer)
     }
 }
