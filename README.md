@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/lonepeon/pixie/branch/main/graph/badge.svg?token=HC7WSVDRO2)](https://codecov.io/gh/lonepeon/pixie)
+
 # Pixie
 
 CLI which generate a random image on a square grid based on a given word
@@ -34,3 +36,9 @@ Options:
   -h, --help             Print help
   -V, --version          Print version
 ```
+
+---
+
+## Installation
+
+A pre-built binary is available on the [release page](https://github.com/lonepeon/pixie/releases).
