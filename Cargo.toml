@@ -21,7 +21,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.3.1", features = ["derive"] }
 image = "0.24.6"
 imageproc = "0.23.0"
 png = "0.17.7"
